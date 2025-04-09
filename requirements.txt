@@ -1,2 +1,3 @@
-unsloth==2025.3.19
+unsloth[cu124-torch260]
 xformers==0.0.29.post3
+torch==2.6.0

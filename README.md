@@ -88,7 +88,7 @@ trs-extraction/
 
 *(Specific command-line examples will be added as scripts are developed)*
 
-## Citation (Placeholder)
+## Citation
 
 If you use this work, please cite:
 ```bibtex
