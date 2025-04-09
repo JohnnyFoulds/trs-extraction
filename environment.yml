@@ -1,0 +1,15 @@
+name: trs-extraction 
+channels:
+  - conda-forge
+  - defaults
+  - pytorch
+  - nvidia
+  - xformers
+dependencies:
+  - python=3.11
+  - pip==25.0.1
+  - pytorch-cuda=12.4
+  - pytorch==2.6.0
+  - pip:
+      - -r requirements_dev.txt
+      - -r requirements.txt

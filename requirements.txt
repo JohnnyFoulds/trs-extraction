@@ -1,0 +1,2 @@
+unsloth==2025.3.19
+xformers==0.0.29.post3
