@@ -6,8 +6,8 @@ channels:
   - nvidia
   - xformers
 dependencies:
-  - python=3.11
-  - pip==25.0.1
+  - python=3.11.12
+  - pip=25.0.1
   - pytorch-cuda=12.4
   - pip:
       - -r requirements_dev.txt
