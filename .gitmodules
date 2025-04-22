@@ -1,0 +1,3 @@
+[submodule "data/raw/kleister-nda"]
+	path = data/raw/kleister-nda
+	url = git@github.com:applicaai/kleister-nda.git
