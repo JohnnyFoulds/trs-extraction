@@ -3,6 +3,11 @@
 ## Dataset
 
 - [thesis-layoutlm](https://github.com/AleRosae/thesis-layoutlm)
+- [ICDAR 2019 Robust Reading Challenge on Scanned Receipts OCR and Information Extraction](https://github.com/zzzDavid/ICDAR-2019-SROIE)
+
+## Nougat
+
+- [](https://huggingface.co/docs/transformers/main/en/model_doc/nougat)
 
 ## UnslothAI
 

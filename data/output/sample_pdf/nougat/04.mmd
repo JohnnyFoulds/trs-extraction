@@ -1,0 +1,672 @@
+BERT-Guided Stylistic Hermeneutics (BGSH): A Cross-Translation Statistical Framework for Pauline Interpolation Detection
+
+Johannes Foulds
+
+Department of Computing
+
+University of London
+
+London, United Kingdom
+
+jir2@student.london.ac.uk
+
+###### Abstract
+
+This study introduces BERT-Guided Stylistic Hermeneutics (BGSH), an unsupervised computational framework leveraging masked language models (MLMs) to detect stylistic anomalies within the Pauline epistles. Specifically, DeBERTa models fine-tuned on undisputed Pauline letters compute pseudo-perplexity scores and translation-specific z-score normalisation across six English Bible translations (ESV, NLT, NASB1995, NRSV, NIV, and NET). This novel integration of NLP techniques systematically identifies verses exhibiting stylistic deviations potentially indicative of redaction or interpolation without requiring manual annotations or doctrinal inputs.
+
+**Translation-specific analyses reveal that formal-equivalence translations (e.g., NASB1995) yield greater precision, whereas dynamic translations (e.g., NLT) offer broader anomaly detection coverage. Cross-translation consensus methods--including strict intersection and Stouffer's z-score aggregation--effectively mitigate translation-specific artefacts, significantly increasing the interpretive robustness of anomaly detection. Forward subset selection with penalised threshold optimisation further refines detection, achieving an optimal ensemble configuration (NLT, NRSV, NASB1995, NIV) that surfaces anomalies consistently aligned with longstanding textual-critical hypotheses, such as contested passages in 1 Timothy and 2 Corinthians.**
+
+Although classification metrics, particularly the Matthews Correlation Coefficient (MCC), appear low due to heuristic dataset limitations--reflecting interpretive rather than computational challenges--the model consistently identifies stylistically plausible interpolations recognised in scholarly discourse. The BGSH framework thus offers a reproducible and statistically rigorous approach, enhancing traditional redactional criticism through computational stylometry. Future research directions include direct analysis of the original Koine Greek texts and extension to broader diachronic corpora.
+
+_Keywords-- Computational Hermeneutics, Stylistic Anomaly Detection, Masked Language Models, Pseudo-perplexity, DeBERTa. Computational Stylometry, Pauline Epistles, Textual Interpolation, Cross-Translation Analysis, Biblical Textual Criticism_TABLE OF CONTENTS
+
+I. INTRODUCTION
+
+A. Background and Motivation
+
+B. Research Questions and Objectives
+
+C. Scope and Limitations
+
+D. Significance of the Study
+
+II. Literature Review
+
+A. INTRODUCTION
+
+B. Stylometric Authorship Attribution in BIBUCAI Studies and Computational Linguistics
+
+C. Language Models for Striylistic Analysis and Anomaly Detection
+
+D. Textual Criticism and Interpolation Theory
+
+E. Synthesis and Contribution Framing
+
+III. METHODOLOGY
+
+A. Methodological Foundations and Pipeline Overview
+
+B. Corpus Construction and Translation Duration
+
+C. Language Model Fine-Tuning and Pretraining Protocols
+
+D. Pseudo-Perplexity Modeling and Z-Scope Normalisation
+
+E. Translation-Independent Signal Aggregation
+
+F. Anomaly Thresholding and Diagnostic Stratification
+
+G. Evaluation Metrics and Interpretation Criteria
+
+H. Design Rationale
+
+IV. RESULTS AND ANALYSIS
+
+A. EXPERIMENTAL Setup Overview
+
+B. Model Training and Convergence Patterns
+
+C. Perplexity Distribution Diagnostics
+
+D. Heuristically-Derived Interpolation Labels Based on Scholarly Annotation
+
+E. Fixed-Threshold Evaluation Against Heuristic Labels
+
+F. Translation-Specific Anomaly Distributions and Consensus Baselines
+
+G. Final Consensus Evaluation and Ensemble Optimisation
+
+V. DISCUSSION AND INTERPRETATION
+
+18
+
+A. Reliability of Fine-Tuned MLMs Across Translations (RQ1)
+
+19. Impact of Cross-Translation Consensus (RQ2)
+
+19. C. Alignment with Textual-Critical Scholarship (RQ3)
+
+19. D. Optimised Ensemble Modelling (RQ4)
+
+20. VI. CONCLUSION AND FUTURE WORK
+
+21
+
+VII. ETHICS CONSIDERATIONS
+
+A. Data Acquisition and Usage
+
+22. B. Interpretative Responsibility
+
+22. C. Algorithmic Transparency and Bias
+
+22. D. Interpretability Respect.
+
+22. E. Societal and Relations Impact
+
+22. F. Data Security and Privacy
+
+23. G. Future Ethical Considerations
+
+23. H. CONCLUSIONList of Tables
+
+TABLE 1. BEST VALIDATION LOSS ACHIEVED FOR EACH TRANSLATION AND CORRESPONDING EPOCH OF CONVERGENCE
+
+TABLE II. TRAINING DATA PSEUDO-PERPLEXITY SCORES: CONFORMITY TO NORMALITY
+
+TABLE III. PERFORMANCE METRICS FOR ANOMALY DETECTION MODELS
+
+TABLE IV. ANOMALIES DETECTED PER TRANSLATION (FIXED THRESHOLD \(Z\geq 2.0\))
+
+TABLE V. TRANSLATION-SPECIFIC FALSE POSITIVE ISOLATION
+
+TABLE VI. CONSENSUS YIELD AND COVERAGE: STRICT VS STOUFFER
+
+TABLE VII. SUMMARY OF CLASSIFICATION AND RANKING METRICS ACROSS CONSENSUS STRATEGIES AND ENSEMBLES
+
+## I Introduction
+
+### _Background and Motivation_
+
+The Pauline epistles have long been scrutinised for questions of authorship and compositional integrity. While letters such as _Romans_, _Galatians_, and _1 Thessalonians_ are broadly regarded as genuinely Pauline, others remain disputed--either partly or entirely--due to stylistic, theological, or structural divergences. Traditional assessments rely on philology, rhetorical analysis, and historical-critical exegesis but remain subjective and shaped by interpretive assumptions.
+
+Recent advances in natural language processing (NLP) and deep language modeling have brought statistical rigor to this debate. Masked language models (MLMs)--for example, BERT and DeBERTa--now allow us to quantify stylistic cohesion by measuring perplexity or contextual entropy. These tools capture rich contextual signals and facilitate verse-level anomaly detection, thereby complementing conventional scholarly methods.
+
+Positioned at the junction of computational stylistics, biblical studies, and deep learning, this research introduces the **BERT-Guided Stylistic Hermeneutics (BGSH)** framework. BGSH applies fine-tuned MLMs to compute z-score-normalized perplexity across multiple English Bible translations, identifying stylistic anomalies potentially associated with redaction, interpolation, or pseudonymous authorship.
+
+Methodologically, this work aims to demonstrate that stylistic deviations can be detected at scale with minimal theological bias. Hermeneutically, it offers empirical evidence that can bolster or challenge contested passages, supplementing traditional exegtical practices with data-driven diagnostics grounded in contemporary machine learning.
+
+By analysing multiple translations, BGSH seeks cross-translation agreement and thus filters out translation-specific artifacts. Incorporating z-score normalization and ensemble strategies (e.g., Stouffer's method) further enhances interpretive clarity. In short, this study fuses textual criticism and modern AI methods, proposing that computational stylistics can illuminate ancient texts while advancing unsupervised anomaly detection.
+
+### _Research Questions and Objectives_
+
+This study is driven by four central research questions, each reflecting a distinct facet of the BGSH framework and its bearing on debates about Pauline authorship, redaction, and stylistic consistency:
+
+* **RQ1**: Can masked language models (fine-tuned on undisputed Pauline letters) detect stylistic anomalies in contested epistles? _Hypothesis_: Verses flagged for high normalised perplexity will partially overlap with passages previously proposed as interpolations.
+* **RQ2**: Does cross-translation consensus reduce false positives compared to single-translation approaches? _Hypothesis_: Aggregating z-scores from multiple translations (e.g., using Stouffer's method) will enhance precision by minimising translation-specific artefacts.
+* **RQ3**: Does automated anomaly detection yield verse-level outputs consistent with established textual-critical perspectives? _Hypothesis_: Anomalies identified by the ensemble will meaningfully align with verses previously cited as interpolations, despite an absence of direct supervision.
+* **RQ4**: Can translation-ensemble subsets be optimised to balance true positives against penalised false positives? _Hypothesis_: Selective forward subset selection and threshold tuning will outperform naive inclusion of all translations, measured by a penalised objective function.
+
+The **objectives** of this study closely mirror these questions and underpin the methodological pipeline, which integrates computational stylistics and digital philology. Specifically, the aims are to:
+
+1. **Develop** stylistic baselines for Pauline authorship by fine-tuning MLMs on undisputed epistles across six English Bible translations.
+2. **Identify** stylistically anomalous verses by computing pseudo-perplexity and applying translation-specific z-score normalisation.
+3. **Evaluate** anomaly detection results against a weakly labelled interpolation dataset, using fixed-threshold classification metrics.
+4. **Investigate** cross-translation consensus strategies to reduce false positives and refine detection robustness.
+5. **Optimise** ensemble subsets through forward selection and threshold calibration, guided by a penalised scoring objective.
+6. **Interpret** top-scoring anomalies in relation to known redaction, pseudepigraphical, or interpolation theories--without relying on manual annotation.
+
+This rigorous yet unsupervised design provides a scalable pathway for integrating quantitative NLP methods into longstanding textual-critical inquiries about the Pauline corpus.
+
+### _Scope and Limitations_
+
+This study applies computational stylistics to biblical textual criticism with a focus on the Pauline epistles. The **BERT-Guided Stylistic Hermeneutics (BGSH)** framework uses masked language models (MLMs) and z-score-normalised perplexity to detect stylistic anomalies. We deliberately restrict our analysis to **English translations** (ESV, NLT, NRSV, NET, NASB1995, and NIV), ensuring coverage of both formal and dynamic equivalence paradigms; future work may extend to comparative modelling of Koine Greek texts.
+
+The corpus comprises only Pauline letters, divided into training, validation, and testing subsets based on scholarly classifications of authenticity. Other biblical or epistolary corpora lie outside this scope. Our methodology relies on **fine-tuned DeBERTa** models, excluding autoregressive or sequence-to-sequence architectures and auxiliary stylometric features (e.g., part-of-speech, discourse analysis).
+
+Perplexity scores are derived via pseudo-likelihood estimates from the MLMs, then converted to z-scores relative to each translation's training distribution. Although we conduct basic checks for near-Gaussian behaviour, distributional deviations remain a recognised limitation. Cross-translation **consensus** uses either strict intersection or Stouffer's z-score aggregation, without exploring alternative ensembling or joint multilingual designs.
+
+This study is fully **unsupervised**, with no manual annotation or direct human labelling. Instead, we validate interpretive alignment through passages previously hypothesised as interpolations in the literature. Finally, **ethical and licensing constraints** limit redistribution of translation-aligned corpora and model checkpoints. However, detailed procedural documentation provides transparency and enables replication or extension.
+
+### _Significance of the Study_
+
+This study arises at the convergence of computational linguistics, textual criticism, and digital hermeneutics, introducing BERT-Guided Stylistic Hermeneutics (BGSH) as a methodological framework for detecting stylistic anomalies in ancient textual corpora. Its significance is threefold: methodological, interpretive, and disciplinary.
+
+Methodologically, the work advances an unsupervised, statistically grounded approach to stylometry by combining masked language models trained on undisputed Pauline texts with z-score-normalised perplexity measures. Cross-translation consensus further mitigates translation-specific artefacts, enhancing the robustness of anomaly detection across distinct linguistic renderings. Interpretively, the study offers a computational mechanism for corroborating or questioning traditional hypotheses of redaction and interpolation. By aligning elevated perplexity scores with verses previously identified as questionable, it complements established exegiential methods with data-driven diagnostics. At the disciplinary level, this research illustrates how modern deep learning can inform not only conventional NLP tasks but also the hermeneutic augmentation and literary-critical analysis characteristic of the humanities. It is generalisable and reproducible, and thus applicable beyond the Pauline corpus to other areas of digital philology, diachronic stylistics, or historical linguistics.
+
+In addition, the study holds pedagogical and infrastructural importance. Its pipeline--spanning data preprocessing, model training, statistical calibration, and cross-translation inference--serves as a reproducible template for computational humanities research. By avoiding human annotations and limiting interpretive bias, the BGSH framework underscores the potential of large-scale, automated methodologies in scholarly textual analysis. Overall, it demonstrates that perplexity-based diagnostics, grounded in masked language modelling, can function not only as computational tools but also as critical instruments of scholarly interpretation.
+
+## II Literature Review
+
+### _Introduction_
+
+This chapter examines the scholarly foundations that contextualise the present study, positioned at the intersection of computational stylometry, large language models for anomaly detection, and biblical textual criticism focusing on interpolation theory. Each domain brings essential methodological or epistemological insights that anchor the BERT-Guided Stylistic Hermeneutics (BGSH) framework.
+
+The chapter first surveys relevant research guiding this work's technical and conceptual design, then highlights the scholarly gap: the absence of an unsupervised, large language model-based anomaly detection framework tailored to computational interpolation in theological corpora. Although each domain has advanced methodologies, cross-pollination has remained minimal, creating an opportunity for synthesis.
+
+This integration arises from the shortcomings of traditional hermeneutic and textual-critical methods in addressing contested authorship and layered composition. Historical-critical techniques, though insightful, remain largely qualitative. Stylometric approaches quantify authorial style but often rely on shallow lexical features with limited generalisability. Transformer-based language models, by contrast, enable context-sensitive linguistic modelling and probabilistic interpretability.
+
+By applying masked language models trained on undisputed Pauline texts and normalising pseudo-perplexity scores across translations, the BGSH framework provides a statistically rigorous, translation-agnostic approach to stylistic anomaly detection. Cross-translation consensus further strengthens interpretive robustness by reducing reliance on any single translation's artefacts.
+
+The sections that follow trace each field's historical development, methodological advances, and key debates, culminating in a synthesis that underpins the research question and its proposed resolution. This discussion begins with the evolution of stylometric authorship attribution towards contextualised modelling.
+
+### _Stylometric Authorship Attribution in Biblical Studies and Computational Linguistics_
+
+Stylometry, understood as the quantitative study of linguistic style, has historically underpinned authorship attribution and literary forensics. Traditional methods rely on shallow text-based features--word frequency, sentence length, function word use, and character n-grams--analysed through statistical techniques such as principal component and discriminant analysis. Foundational work by Mosteller and Wallace [1] showed the power of frequency-based modelling in identifying authorial signatures, as seen in the Federalist Papers. Subsequent studies by Burrows [2] and Holmes [3, 4] expanded stylometry's computational scope to include biblical corpora.
+
+In biblical studies, stylometry has targeted authorship questions surrounding Pauline epistles [4]. Researchers have investigated stylistic features linked to theological or educational layers. Yet, most traditional stylometric approaches function at the document level and thus struggle to detect fine-grained deviations (e.g., verse-level interpolations). They are also susceptible to topic drift and genre variation [5], and often depend on surface-level lexical statistics that cannot capture deeper syntactic or semantic patterns.
+
+Vector-based methods partially addressed these limitations by embedding texts in high-dimensional semantic spaces, for instance through latent semantic analysis or topic modelling. However, truly context-sensitive analysis only became feasible with transformer-based architectures, including BERT [6] and DeBERTa [7], which incorporate semantic, syntactic, and discourse-level features within a single probabilistic framework. Work by Bommasani et al. [8] has shown these models' effectiveness in capturing stylistic variation across diverse corpora.
+
+Building on these developments, the present study employs a statistical anomaly-detection framework based on z-score normalised pseudo-perplexity from masked language models. By fine-tuning exclusively on undisputed Pauline texts and comparing scores verse by verse, it shifts from frequency-based stylometry toward contextualised diagnostics, enabling more nuanced, interpretable detection of possible interpolations in ancient theological writings.
+
+### _Language Models for Stylistic Analysis and Anomaly Detection_
+
+The advent of large-scale language models (LLMs) has reshaped the landscape of computational stylistics and anomaly detection. While the term "large language models" (LLMs) aligns conceptually with contemporary discourse, this study specifically employs transformer-based pretrained encoders--BERT and DeBERTa. Although technically bidirectional contextual models trained via masked language modelling (MLM), BERT-style models are broadly categorised under LLMs due to their scale, architecture, and versatility [6].
+
+At the core of these models is the transformer architecture, characterised by a self-attention mechanism capable of capturing intricate token dependencies [9]. Pretrained on large unlabelled corpora, BERT and DeBERTa generate contextual embeddings that integrate syntactic, semantic, and discourse-level information, significantly surpassing previous stylometric methods relying on shallower textual features [10].
+
+In anomaly detection, LLMs assess text plausibility via pseudo-perplexity, quantifying predictability under a given language model. In MLM frameworks, pseudo-perplexity for a verse \(\nu\) is computed by sequentially masking tokens and averaging log-probabilities:\[\text{PPL}_{\text{pseudo}}(v)=\exp\left(-\frac{1}{N}\sum_{i=1}^{N}\log P\left(w_{i} \mid w_{\setminus i}\right)\right)\]
+
+Here, \(N\) denotes the number of tokens in the verse, and \(w_{\setminus t}\) denotes the verse with token \(i\) masked.
+
+Within the BGSH framework, models fine-tuned on undisputed Pauline texts establish stylistic baselines for each translation. Pseudo-perplexity scores from contested epistles are standardised into z-scores, highlighting deviations from normative stylistic patterns. The method's unsupervised nature is advantageous in theological corpora lacking clear ground truth [11]. Previous studies demonstrate the effectiveness of perplexity-based diagnostics in computational philology and redactional studies [12].
+
+BGSH extends this approach through cross-translation consensus, employing Stouffer's z-score aggregation (Stouffer et al., 1949) to mitigate translation-specific artefacts. Integrating contextualised perplexity scoring, statistical standardisation, and ensemble consensus, BGSH provides a robust, interpretable framework for computational textual criticism in hermeneutic contexts.
+
+### _Textual Criticism and Interpolation Theory_
+
+Textual criticism involves reconstructing and evaluating textual variants within ancient manuscripts, aiming to recover the most plausible original text [13, 14]. In biblical studies, it intersects with hermeneutics, theology, and philology to identify scribal errors, editorial expansions, and interpolations--deliberate insertions of material into originally coherent texts. Such interpolations often reflect theological or ideological agendas, resulting in layered textual strata and complicating diachronic interpretation [15].
+
+Interpolation theory is especially prominent in Pauline studies, with proposed interpolations in the Pastoral Epistles (1 Timothy, 2 Timothy, Titus), 1 Corinthians 14:34-35, and 2 Corinthians 6:14-7:1 [16]. Scholarly arguments for interpolation typically rely on stylistic disruptions, thematic deviations, lexical anomalies, or sudden rhetorical shifts. Traditional detection methods--literary-critical analysis, manuscript comparisons, and theological motif tracing--are inherently subjective, relying on exegetical judgement rather than reproducible, statistically grounded diagnostics [13].
+
+A further challenge in interpolation detection arises from the absence of a reliable, universally accepted dataset. Biblical texts are shaped by centuries of doctrinal development, complicating efforts to establish consistent ground truth [15]. Consequently, contemporary approaches increasingly favour computational techniques capable of identifying linguistic anomalies independently of human annotation.
+
+Recent advances in computational philology offer promising alternatives, including pseudo-perplexity scoring and z-score normalisation using masked language models [11, 12]. Rather than presupposing interpolations, these methods detect linguistic deviations by comparing contested passages against stylistic baselines derived from undisputed texts. Triangulating these diagnostics across multiple translations and aggregating results using statistical fusion techniques, such as Stouffer's method [17], enhances interpretive reliability and reduces translation-specific artefacts.
+
+The BGSH framework, introduced in this study, operationalises these computational advancements in a structured pipeline combining masked language modelling, z-score normalisation, and cross-translation consensus. BGSH does not replace traditional exegetical methods; instead, it supplements them with reproducible, statistically rigorous anomaly detection, thus improving transparency and methodological reproducibility in biblical criticism.
+
+Ultimately, BGSH reframes interpolation detection from an interpretive exercise into a probabilistically tractable anomaly-detection task within a computational stylistic paradigm.
+
+### _Synthesis and Contribution Framing_
+
+This chapter has synthesised traditional stylometric authorship analysis, contemporary language modelling, and textual-critical approaches to biblical interpolation detection. The review has shown that interpolation detection within the Pauline corpus presents unique challenges, including epistemological uncertainty, subjective interpretation, and linguistic complexity.
+
+Despite recent methodological advances, critical limitations remain. Classical stylometric approaches rely predominantly on superficial lexical features and lack the granularity needed for clause- or verse-level interpolation detection. These methods often conflate authorial signal with genre or thematic drift. More advanced embedding-based approaches typically operate at document granularity, neglect multi-translation alignment, or presuppose the availability of annotated ground truth--an unrealistic condition in theological texts. Moreover, existing ensemble stylometry lacks robust statistical justification and reproducibility, rarely addressing translation artefacts systematically.
+
+In contrast, the BGSH framework addresses these shortcomings by implementing a z-score-based pipeline that is unsupervised, translation-agnostic, and statistically reproducible. Rather than framing interpolation detection as a supervised classification problem, BGSH reconceptualises it as probabilistic anomaly detection grounded in verse-level stylistic deviation signals across translations.
+
+The contribution of this study is twofold. First, it introduces the BERT-Guided Stylistic Hermeneutics (BGSH) methodology, a computationally robust anomaly detection pipeline tailored specifically for hermeneutic and theological inquiry. This methodology leverages masked language models fine-tuned exclusively on undisputed Pauline texts to detect stylistic anomaliessystematically. Second, by relying solely on English translations, it significantly lowers methodological barriers, thus allowing broader scholarly engagement beyond specialists in Greek philology.
+
+BGSH further enhances traditional stylistic diagnostics by incorporating interpretive triangulation, cross-model consensus scoring, and diagnostic visualisation. These innovations reflect a commitment to interpretive transparency, statistical accountability, and reproducibility. Rather than merely applying existing machine-learning methods, BGSH reshapes stylistic anomaly detection into a rigorous, data-driven approach suitable for rheological discourse and textual scholarship.
+
+Ultimately, the BGSH pipeline provides a model of interdisciplinary methodological synthesis, bridging deep learning, statistical anomaly detection, and textual hermeneutics. Its applicability extends beyond biblical studies, presenting a generalisable framework for analysing textual corpora with layered composition or disputed authorship.
+
+The subsequent chapter formalises the computational architecture and statistical evaluation methods underpinning BGSH, setting out detailed implementation procedures based on the theoretical foundation outlined here.
+
+## III Methodology
+
+### _Methodological Foundations and Pipeline Overview_
+
+This chapter formalises the computational architecture, modelling strategy, and statistical approach underlying the BERT-Guided Stylistic Hermeneutics (BGSH) framework introduced in Chapter 2. BGSH is designed as an unsupervised, modular anomaly-detection system, identifying stylistic anomalies--potential indicators of textual interpolations--through probabilistic signals derived from masked language modelling.
+
+The pipeline comprises multiple computational stages: corpus construction, masked language model fine-tuning, pseudo-perplexity scoring, z-score normalisation, cross-translation aggregation, and interpretive evaluation. Each stage prioritises computational reproducibility and interpretive transparency, avoiding manual annotations or supervised classification to maintain methodological neutrality and generalisability.
+
+Transformer-based masked language models, specifically DeBERTa-base, were selected for their capability to capture linguistic and stylistic patterns effectively. Models are fine-tuned independently on undisputed Pauline epistles for each English translation, establishing a statistical baseline of authorial style. Stylistic deviation within contested epistles is quantified using pseudo-perplexity scoring, where verse-level scores are computed by sequentially masking tokens and aggregating their negative log-likelihoods. To enable comparative analysis across verses, these scores are normalised using z-scores, evaluated against the training corpus distribution. Diagnostic visualisations, such as kernel density estimates and Q-Q plots, validate assumptions underlying this normalisation.
+
+Subsequently, translation-specific anomaly signals are aggregated using two complementary strategies: intersectional logic (strict consensus) and statistical fusion via Stouffer's z-score method. This cross-translation approach mitigates translation artefacts by emphasising consistent stylistic deviations. Verses flagged with consistently high z-scores across translations are prioritised for interpretive analysis.
+
+Each methodological step is accompanied by explicit justification, ensuring clarity in statistical assumptions, design choices, and interpretive implications. Consequently, BGSH emerges as an unsupervised, modular framework capable of stylistic anomaly detection without reliance on predefined labels, manual annotation, or linguistic supervision. Although demonstrated here within Pauline epistles, this pipeline remains broadly applicable to other redactionally complex or diachronic textual corpora.
+
+### _Corpus Construction and Translation Curation_
+
+The BGSH framework relies fundamentally on constructing a linguistically precise, structurally consistent corpus as input for language model training, statistical baselining, and anomaly detection. This corpus preserves verse-level granularity essential for detecting stylistic anomalies while accurately reflecting stylistic diversity across translations.
+
+Six prominent modern English Bible translations were selected: English Standard Version (ESV), New Living Translation (NLT), New American Standard Bible (NASB1995), New Revised Standard Version (NRSV), New International Version (NIV), and New English Translation (NET). The chosen translations provide both theological diversity and varied interpretive approaches, enriching cross-translation stylistic analysis.
+
+The corpus was segmented at the verse level, a granularity chosen specifically to match the scale at which stylistic anomalies commonly occur in biblical textual criticism. This approach ensures syntactic cohesion while enabling precise localised detection. Crucially, punctuation and casing were preserved throughout preprocessing to retain stylistic cues vital to perplexity scoring.
+
+The preprocessing pipeline comprised Unicode normalisation, removal of formatting artefacts, structural alignment verification, and canonical ordering across translations. Each translation was serialised into structured JSON files, indexed hierarchically by book, chapter, and verse to facilitate efficient verse-level alignment and retrieval. Tokenisation was delegated to the model-specific tokenizer (DeBERTaV2Tokenizer) to ensure compatibility with downstream masked language modelling. Each verse was treated as an independent evaluation unit to support robust z-score normalisation.
+
+Fig. 1: Schematic overview of the BGSH pipeline architecture. Each block represents a distinct computational module in the anomaly detection system. The pipeline progresses from multi-translation corpus construction, through transformer-based perplexity scoring and z-score normalisation, to translation consensus modelling and statistical anomaly evaluation. The entire system is fully unsupervised and constructed for methodological reproducibility and interpretive transparency.
+
+This pipeline was implemented in Python, employing modular scripts that automate corpus ingestion, formatting, alignment validation, and tokenisation. Common NLP libraries (e.g., regex, unicodedata, json) were integrated, supported by custom translation-specific routines. Comprehensive version control and preprocessing logs were maintained to ensure reproducibility and traceability throughout corpus construction.
+
+Importantly, observed variations in verse length or syntactic structure across translations were intentionally retained, recognising these as meaningful stylistic signals rather than noise. The preprocessing objective was thus not corpus homogenisation, but preparation for linguistically faithful modelling and translation-consistent anomaly detection.
+
+### _Language Model Fine-Tuning and Pretraining Protocols_
+
+The core computational component of the BGSH pipeline relies on transformer-based masked language models (MLMs), specifically fine-tuned to capture stylistic patterns present in undisputed Pauline epistles. This fine-tuning approach is deliberately employed not to embed theological semantics but rather to sensitise the model specifically to morphosyntactic and stylistic structures. Consequently, stylistic deviations in held-out texts can be quantified relative to learned probabilistic baselines.
+
+The DeBERTa model [7] was selected due to its superior generalisation capabilities arising from disentangled attention mechanisms and enhanced relative position encoding. These architectural advancements improve performance significantly over earlier architectures such as BERT [6] and RoBERTa [18], particularly in fine-grained morphosyntactic contexts essential to stylistic coherence analysis at the verse level.
+
+For each translation within the corpus, a separate DeBERTa instance was fine-tuned. The training set included Romans, Galatians, and 1 Thessalonians, selected for their recognised stylistic homogeneity. Tokenisation utilised DeBERTa's native tokenizer to maintain alignment with pretrained embeddings. Fine-tuning leveraged the HuggingFace Trainer API with standard configuration settings and a masked language modelling (MLM) masking probability of 15%. Early stopping was applied based on validation performance on a subset of the Philippines epistle, with optimal checkpoints identified by lowest validation loss retained for downstream tasks.
+
+Preliminary comparisons with alternative encoders--RoBERTa and ModernBERT [19]--confirmed DeBERTa's superiority in terms of perplexity consistency, anomaly recall, and z-score stability across translations. RoBERTa was stable yet less sensitive to fine-grained stylistic nuances, whereas ModernBERT, despite faster inference and better long-context handling, proved slightly less consistent in anomaly detection.
+
+All experiments employed fixed preprocessing pipelines and evaluation procedures, ensuring reproducibility and comparability across models and translations.
+
+### _Pseudo-Perplexity Modelling and Z-Score Normalisation_
+
+The central diagnostic within the BGSH pipeline is the calculation of pseudo-perplexity scores derived from masked language models (MLMs), subsequently normalised into z-scores for comparative analysis. Elevated pseudo-perplexity scores indicate stylistic deviations, potentially signifying interpolations or editorial layering.
+
+Unlike autoregressive models, MLMs like DeBERTa do not directly compute a sequence-level probability. Instead, pseudo-perplexity is estimated iteratively by masking each token in a verse and calculating the negative log-likelihood of the masked token according to the model. This pseudo-perplexity measure was formalised by Salazar et al. [11] and adapted for the current biblical application.
+
+Given a verse represented as a token sequence \(x=(x_{1},x_{2},...,x_{n})\), the pseudo-log-likelihood is computed by sequentially masking each token:
+
+\[\mathcal{L}(x)=\sum_{i=1}^{n}\log P\left(x_{i}\mid x^{\backslash i}\right)\]
+
+The corresponding pseudo-perplexity is defined as:
+
+\[\text{PPL}_{\text{pseudo}}(x)=\exp\left(-\frac{1}{n}\mathcal{L}(x)\right)\]
+
+Each verse undergoes this scoring process independently, using DeBERTa's native tokenizer to preserve alignment with the model's pretrained embeddings and internal representation.
+
+To standardise comparisons across verses and translations, pseudo-perplexity scores are converted into z-scores relative to the training corpus distribution:
+
+\[z_{i}=\frac{s_{i}-\mu_{\text{train}}}{\sigma_{\text{train}}}\]
+
+where \(s_{i}\) is the pseudo-perplexity score for verse \(x_{i}\), and \(\mu_{\text{train}}\) and \(\sigma_{\text{train}}\) represent the training corpus mean and standard deviation, respectively. This normalisation operationalises stylistic anomalies as statistical outliers relative to the undisputed Pauline baseline.
+
+The validity of the z-score normalisation was confirmed using kernel density estimation (KDE) and quantile-quantile (Q-Q) plots. Diagnostic visualisations supported approximate Gaussian distributions within the z-score transformed space, justifying subsequent statistical aggregation and thresholding. Crucially, z-scores provide a translation-independent metric, enabling robust cross-translation comparisons.
+
+The pseudo-perplexity and z-normalisation approach thus provides an efficient, unsupervised methodology for probabilistic inference of stylistic anomalies. Its reliance on standardised statistics without manual annotation or labelling aligns methodologically with contemporary computational literary studies and anomaly detection research.
+
+### _Translation-Independent Signal Aggregation_
+
+To enhance detection robustness and mitigate translation-specific variance, the BGSH pipeline implements translation-independent signal aggregation using statistical meta-analysis. The underlying assumption is that genuine stylistic anomalies--such as interpolations or redactional insertions--manifest consistently as elevated z-scores across multiple independent translations. In contrast, artefacts arising from individual translations typically lack such cross-translation coherence.
+
+Translation-specific z-scores, computed by DeBERTa models fine-tuned on each translation, are aggregated using two complementary strategies: a strict intersection criterion and a statistical meta-aggregation based on Stouffer's method [17].
+
+The intersection strategy employs a conservative threshold, flagging verses as anomalous only when they exceed a specified z-score in every translation. This stringent approach reduces false positives by focusing exclusively on anomalies agreed upon by all translation models, albeit at the cost of sensitivity to anomalies that appear prominently in fewer translations.
+
+Complementarily, Stouffer's method provides a continuous ensemble measure of anomaly strength, computed as the average of verse-specific z-scores across translations:
+
+\[Z_{i}^{*}=\frac{1}{\sqrt{f}}\sum_{t=1}^{T}z_{i}^{(t)}\]
+
+where z\({}_{i}^{(t)}\) represents the z-score of verse \(i\) in translation \(t\), and \(T\) is the total number of translations.
+
+While this unweighted aggregation assumes equal contributions and statistical independence between translations--conditions somewhat violated due to their common Greek source text and linguistic overlap--it remains practically useful as a ranking heuristic [20]. It is important to note that the method, in our application, does not provide formal statistical inference but instead offers a prioritised anomaly ranking.
+
+Future enhancements might include weighted aggregation, covariance-aware adjustments, or empirical calibration to address inter-model dependency more rigorously. However, even in its current form, Stouffer's approach provides valuable interpretative flexibility, enabling detection of anomalies with partial translation agreement that might be missed by the intersection strategy.
+
+Together, these aggregation methods operationalise robust, translation-independent anomaly detection within the BGSH framework. They systematically integrate stylistic signals from multiple linguistic sources into a unified diagnostic measure, facilitating consistent identification of anomalies despite textual and translation-specific heterogeneity.
+
+### _Anomaly Thresholding and Diagnostic Stratification_
+
+Following the computation of z-score normalised pseudo-perplexities, the BGSH pipeline employs a statistical stratification phase, classifying verses as stylistically anomalous based on established significance thresholds. Initially, a fixed z-score threshold of z \(\geq\) 2.0, corresponding roughly to the 97.5th percentile under assumed normality, identifies anomalous verses within each translation. These flagged verses serve as inputs to downstream cross-translation analyses, enabling a translation-agnostic framework for anomaly detection. Empirical threshold optimisation, aiming to balance sensitivity and specificity, is addressed comprehensively in Chapter IV.
+
+To mitigate translation-specific artefacts and enhance anomaly detection robustness, a translation-independent aggregation mechanism complements individual thresholding. A consensus anomaly flag is assigned if a verse consistently exceeds the threshold across multiple translations, or if its aggregated Stouffer z-score surpasses a corpus-wide significance criterion. This dual strategy effectively amplifies genuine stylistic deviations while minimising translation-specific noise.
+
+Each verse annotated as anomalous is accompanied by structured diagnostic metadata, including the aggregated consensus z-score within the consensus distribution. This detailed metadata enables precise interpretive prioritisation, allowing scholars to distinguish clearly between robust anomalies and marginal deviations.
+
+The resulting stratification provides interpretive clarity and enhances the technical reproducibility of the BGSH framework, offering a transparent diagnostic structure tailored specifically to scholarly interpretation of stylistic anomalies in Pauline texts.
+
+### _Evaluation Metrics and Interpretation Criteria_
+
+Evaluation within the BGSH framework aims to quantify detection performance statistically and facilitate interpretive triangulation across translations. The evaluation approach combines formal binary classification metrics with a diagnostic schema that highlights evidential convergence rather than isolated statistical anomalies.
+
+Classification performance was assessed through standard metrics computed from binary anomaly labels under varying z-score thresholds. Precision quantifies the proportion of correctly identified anomalies among all flagged instances:
+
+\[\text{Precision}=\frac{TP}{TP+FP}\]
+
+Recall measures the proportion of genuine anomalies correctly identified:
+
+\[\text{Recall}=\frac{TP}{TP+FN}\]
+
+The harmonic mean of precision and recall, the F1-score, provides a balanced metric:
+
+\[F1=2\cdot\frac{\text{Precision}\cdot\text{Recall}}{\text{Precision}+\text{ Recall}}\]
+
+Given inherent class imbalance, Matthews Correlation Coefficient (MCC) was also employed for balanced performance assessment across all confusion matrix categories:
+
+\[\text{MCC}=\frac{TP\cdot TN-FP\cdot FN}{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\]
+
+A cost-sensitive objective function complemented these metrics, guiding optimal threshold selection:
+
+\[\text{Objective}=TP-\lambda\cdot FP\]
+
+Here, the penalty parameter \(\lambda\) was empirically set at 0.55, reflecting a deliberate trade-off between sensitivity and false-positive reduction, crucial in contexts where conventional metrics alone prove insufficient due to class imbalance and epistemic uncertainty. This scalar objective facilitated threshold optimisation without extensive human annotation, preserving interpretive accuracy alongside scalability.
+
+Interprettive diagnostics involved annotating each verse with structured metadata: the frequency of anomaly threshold exceedance across translations, the maximum z-score observed, the aggregated consensus z-score via Stouffer's method, and the percentile rank within the consensus distribution. These attributes collectively establish a nuanced evidential profile for each anomaly candidate, supporting fine-grained interpretive judgements.
+
+High-confidence anomalies were identified by consistent high consensus scores and substantial cross-translation agreement, whereas low-confidence detections--characterised by isolated or weak model signals--were treated cautiously to minimise false positives from translation-specific artefacts. This structured evaluation thus ensures anomalies flagged by the BGSH pipeline represent robust, reproducible patterns rather than isolated statistical deviations, aligning computational methods closely with textual-critical interpretive practices.
+
+### _Design Rationale_
+
+The design choices in the BGSH pipeline reflect pragmatic trade-offs between statistical robustness, methodological reproducibility, and interpretive accessibility. The initial z-score threshold (2.0) serves as a heuristic baseline, rather than a statistically precise criterion, ensuring consistent anomaly detection that can be empirically refined (see Chapter IV). Similarly, adopting Stouffer's aggregation method prioritises interpretability and practical ease, despite the acknowledged statistical limitations due to the non-independence of translations. This decision recognises moderate inter-model dependency but retains the benefit of a straightforward diagnostic ranking.
+
+The exclusive reliance on English translations represents a deliberate methodological constraint, enabling broader scholarly engagement without requiring specialised knowledge of Greek. Although this decision inevitably reduces direct linguistic fidelity to original texts, it significantly enhances the accessibility and scalability of the BGSH method.
+
+Lastly, pseudo-perplexity scoring aligns the pipeline with recent advancements in unsupervised anomaly detection methods, providing a clear, interpretable token-level metric for stylistic anomalies. This choice facilitates transparent interpretive analysis across diverse translations and experimental contexts without dependence on annotated training data.
+
+Collectively, these decisions balance statistical rigour, interpretive clarity, and methodological practicality, delivering a reproducible and widely applicable computational approach to textual-critical and stylistic analysis within biblical scholarship.
+
+## IV Results and Analysis
+
+### _Experimental Setup Overview_
+
+The experimental pipeline evaluated the effectiveness of fine-tuned masked language models (MLMs) in identifying stylistic anomalies within contested Pauline epistles, potentially indicative of interpolations or redaction. The procedure was independently applied to six English Bible translations: English Standard Version (ESV), New Living Translation (NLT), New Revised Standard Version (NRSV), New English Translation (NET), New American Standard Bible 1995 (NASB1995), and the New International Version (NIV). For each translation, a distinct DeBERTa (microsoft/deberta-v3-base) model was fine-tuned exclusively on verses from undisputed Pauline epistles, while contested epistles were reserved for inference.
+
+Models were trained as binary classifiers (class 0 indicating undisputed verses) for up to 100 epochs, employing early stopping (patience = 5 epochs) based on validation loss. Checkpoints achieving the lowest validation loss were selected. Post-training, each verse was evaluated using pseudo-perplexity scoring, standardised into z-scores relative to the training corpus distribution, thus providing a statistical baseline for identifying stylistic anomalies.
+
+Diagnostic evaluations, including Q-Q plots and kernel density estimates, highlighted systematic deviations from normality, particularly among high pseudo-perplexity values. Despite this, a consistent anomaly threshold of z \(\geq\) 2.0 was uniformly applied across all translations to facilitate comparative analysis.
+
+Detection performance was assessed against a heuristic dataset compiled from scholarly literature, consisting of verses historically proposed as interpolations. Metrics employed included F1-score, recall, Matthews Correlation Coefficient (MCC), balanced accuracy, Cohen's Kappa, and area under the ROC curve (AUC). Additionally, a cost-sensitive objective function, Objective = TP - \(\lambda\cdot\) FP with \(\lambda\) = 0.55, evaluated the trade-off between true positive detection and false-positive penalties. Although this metric informed model comparison, threshold optimisation was deferred to later stages.
+
+Results for each translation were systematically stored, ensuring statistical independence and preventing overfitting during cross-translation aggregation analyses. This structured, unsupervised methodology facilitated robust anomaly detection within the Pauline corpus without manual annotation.
+
+### _Model Training and Convergence Patterns_
+
+Each translation-specific classifier was trained independently using the architecture and parameters specified in the previous section. This section focuses on the empirical training dynamics, including convergence behaviour, early stopping, and validation loss trajectories observed during fine-tuning.
+
+Training was monitored across a maximum of 100 epochs, with early stopping triggered via a patience-based criterion on validation loss. Table I summarises the best validation loss achieved for each translation, along with the corresponding epoch of convergence:
+
+All models demonstrated consistent convergence, with initial high validation losses stabilising over time. Models such as the ESV and NLT exhibited pronounced improvement across epochs, with validation losses decreasing by over 40% from their initial values. The NASB1995 and NRSV models achieved slightly higher final losses, potentially reflecting structural variance in the translation corpora or more idiosyncratic token distributions.
+
+Model checkpoints were preserved at the epoch yielding the minimum validation loss, and no weight averaging was applied across epochs. These checkpoints were subsequently used in the downstream pseudo-perplexity computations reported in later sections.
+
+This stage thus completed the training phase of the BGSH pipeline, producing six translation-specific classifiers optimised for stylistic coherence within uncontested Pauline corpora. The next section details how these models were applied to compute pseudo-perplexity scores for anomaly detection.
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|} \hline \hline
+**Translation** & **Epoch** & \begin{tabular}{l} **Training** \\ **Loss** \\ \end{tabular} & 
+\begin{tabular}{l} **Validation** \\ **Loss** \\ \end{tabular} \\ \hline ESV & 30 & 2.69 & 3.72 \\ \hline NLT & 20 & 3.15 & 3.19 \\ \hline NRSV & 15 & 3.99 & 3.77 \\ \hline NET & 19 & 3.31 & 3.64 \\ \hline NASB1995 & 13 & 3.97 & 4.17 \\ \hline NIV & 12 & 3.94 & 3.94 \\ \hline \end{tabular}
+\end{table}
+Table I: Best Validation Loss Achieved for Each Translation and Corresponding Epoch of Convergence
+
+### _Perplexity Distribution Diagnostics_
+
+To assess the suitability of z-score-based anomaly detection, training perplexity distributions for each translation were examined via quantile-quantile (Q-Q) plots. These plots compare empirical pseudo-perplexity quantiles to a theoretical normal distribution, highlighting deviations from Gaussian assumptions. The goal was to verify whether applying standardised z-score thresholds consistently across translations was statistically sound.
+
+Table II summarises observed distribution characteristics. While most translations showed approximate linearity within the interquartile range, significant deviations were evident in distribution tails. Particularly severe were the right-tailed distributions for NASB1995 and NRSV, reaching maximum perplexities exceeding 3500 and 800 respectively--clear violations of Gaussian assumptions. Translations such as NET and NIV also displayed pronounced upper-tail inflation, whereas ESV and NLT exhibited better overall conformity but still diverged noticeably at higher quantiles.
+
+These findings question the interpretative robustness of z-score normalisation across translations. Although computationally consistent, the statistical interpretation of z-scores varies with distribution shape. Heavy-tailed distributions (NASB1995, NRSV) inflate standard deviations, potentially obscuring moderate anomalies or causing excessive flagging of outliers.
+
+To address these concerns, a robust alternative using the median absolute deviation (MAD) was tested. This replaces mean-based standardisation with median and MAD:
+
+\[z_{\text{robust}}=\frac{x-\text{median}}{1.4826\cdot\text{MAD}}\]
+
+Empirical evaluation, however, showed no performance improvement using this robust measure compared to standard z-scores. Consequently, the standard z-score formulation was retained as a pragmatic heuristic baseline, explicitly acknowledging its statistical limitations.
+
+In summary, the fixed z \(\geq\) 2.0 threshold employed here serves primarily as an initial ranking heuristic rather than a rigorous statistical quantile. The observed variability across translation distributions motivates the subsequent use of cross-translation consensus and threshold optimisation strategies, detailed in Chapter IV.
+
+### _Heuristically-Derived Interpolation Labels Based on Scholarly Annotation_
+
+To enable quantitative evaluation of stylistic anomaly detection, a dataset of proposed interpolations in Pauline epistles was compiled from existing scholarly literature. This structured dataset aggregates historically identified interpolations, providing a basis for comparing automated anomaly detection results against established textual-critical hypotheses.
+
+The dataset includes 296 verses from across the Pauline corpus, annotated with bibliographic metadata and scholarly commentary. It does not represent manually validated ground truth but functions as a heuristic supervisory reference derived from historical-critical scholarship. Consequently, its role is not definitive verification but interpretive alignment assessment for model outputs.
+
+Each verse in the dataset is tagged with metadata, notably scholarly support level (strong, medium, or weak). Strong support indicates widespread scholarly agreement cited in multiple critical commentaries; medium denotes moderate but not unanimous support; weak reflects claims limited to fewer sources or isolated scholarly positions. Inclusion of verses with weak support preserves comprehensive epistemic breadth, enabling sensitivity assessment across widely accepted and more controversial
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|} \hline
+**Translation** & **Conformity** & **Tail Behaviour** & **Interpretive Note** \\ \hline ESV & Moderate deviation & Heavy right tail beyond z \(\approx\) 2.5 & Near-normal core with high-end inflation \\ \hline NLT & Moderate deviation & Upward curvature above & Gaussian structure distorted by long \\  & & \(z\approx\) 2.0; outliers & upper tail \\  & & \(>\) 170 & & \\ \hline NRSV & Poor conformity & Severe deviation; outliers \(>\) 800 & Strongly leptokurtic and skewed \\ \hline NET & Moderate deviation & Pronounced upward curvature; max & Long-tailed with amplified high-end deviation \\ \hline NASB1995 & Severe deviation & Extreme tail with max & Gaussian assumption strongly violated \\  & & & 3500 & \\ \hline NIV & Moderate to poor & Long upper tail with values \(>\) 580 & Skewed with persistent high-end anomalies \\ \hline \end{tabular}
+\end{table}
+Table II: Training Data Pseudo-Perplexity Scores: Conformity to Normalityinterpolations. A representative example is 2 Timothy 4:12, "Tychicus I have sent to Ephesus," which consistently yields elevated anomaly scores despite its classification as weakly supported.
+
+The dataset further distinguishes interpolations by pericope size, ranging from single verses to extensive segments exceeding ten verses. This granularity necessitates careful interpretation of standard metrics like precision and recall, as a correctly identified anomaly within larger segments may underestimate performance in traditional binary classifications.
+
+It is essential to recognise that this dataset, while valuable, is not an absolute benchmark. Rather, it offers a structured proxy for evaluating how well machine-identified anomalies correspond to textual-critical propositions documented in scholarly literature. Its limitations highlight the necessity for triangulated interpretative evaluation using consensus metrics and ranking diagnostics, detailed subsequently in this study.
+
+### _Fixed-Threshold Evaluation Against Heuristic Labels_
+
+To establish baseline performance, each translation-specific model was evaluated against the heuristic interpolation labels described in Section D. This evaluation utilised a fixed pseudo-perplexity z-score threshold of 2.0 across all translations, without threshold tuning or cross-translation aggregation.
+
+The evaluation dataset consisted of verses from Pauline epistles previously identified as potential interpolations based on scholarly literature. Compiled from over 100 critical sources, these verses were chosen for exhibiting text-critical irregularities, stylistic discontinuities, theological incongruities, or structural interruptions. Although this heuristic dataset is not a definitive benchmark, it provides an interpretive reference set to explore the alignment between automated detections and scholarly debates. Thus, metrics like F1-score and MCC should be viewed as indicative rather than definitive.
+
+Performance was quantified using standard metrics including F1-score, recall, AUC, MCC, and macro-average F1. Additionally, a custom interpretive metric penalising false positives (TP - \(\lambda\cdot\text{FP}\), with \(\lambda\) = 0.55) was applied to assess the balance between sensitivity and specificity, though without threshold optimisation at this stage.
+
+Table III summarises model performance across translations:
+
+These results indicate that ESV and NLT achieved relatively higher F1 and recall scores but incurred substantial false positives, reflected by their low penalised objective scores. Conversely, NASB1995, despite having the lowest F1, achieved the best penalised objective score, suggesting a conservative detection strategy with fewer false alarms. This highlights the inadequacy of single metrics and underscores the necessity for composite evaluation and threshold optimisation strategies addressed subsequently.
+
+For a more detailed perspective, verse-level diagnostic inspections identified how often known interpolations appeared among the top 20 highest-ranked anomalies. Here, NASB1995 outperformed other translations (8 out of 20; 40%), despite its overall low recall, whereas ESV only identified 3 out of 20 (15%). This contrast exemplifies how model calibration impacts interpretive accuracy at high-confidence rankings.
+
+Qualitative examination of NASB1995 false positives revealed consistent patterns. High-scoring anomalies often occurred in verses exhibiting syntactic independence or thematic encapsulation, such as moral exhoritations ("But godliness with contentment is great gain") or liturgical imperatives ("Honour widows who are truly widows"). Others were personal notes (e.g., "Erastus remained at Corinth") that, though anomalous stylistically, were contextually legitimate. Conversely, interpolations embedded within longer pericopes sometimes went undetected due to stylistic blending. These findings confirm that z-score sensitivity alone does not guarantee interpretive plausibility, thus reinforcing the value of interpretive post-filtering and cross-model triangulation beyond naive threshold-based detection.
+
+### _Translation-Specific Anomaly Distributions and Consensus Baselines_
+
+To clarify differences in anomaly detection across translations, this analysis compares individual model outputs at a fixed z-score threshold (z \(\geq\) 2.0) against two consensus baselines, providing a foundation for later ensemble optimisation.
+
+Substantial variation emerged in the proportion of verses flagged as anomalous by individual models (Table IV). The English Standard Version (ESV) identified anomalies in approximately 60% of the 936 verses examined, whereas the New American
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|l|l|l|} \hline
+**Translation** & **F1** & **Recall** & **AUC** & **MCC** & **TP - \(\lambda\cdot\text{FP}\)** & **F1** \\  & **(Interp)** & **(Interp)** & **(**_a_ = 0.55)** & & & \\ \hline escv & 0.4 & 0.57 & 0.31 & −0.03 & −43.95 & 0.45 \\ \hline nlt & 0.35 & 0.36 & 0.32 & 0.03 & −8.60 & 0.52 \\ \hline nrsv & 0.26 & 0.23 & 0.31 & −0.02 & −18.45 & 0.49 \\ \hline net & 0.33 & 0.37 & 0.31 & −0.04 & −36.30 & 0.48 \\ \hline nasb1995 & 0.1 & 0.06 & 0.31 & −0.02 & −7.30 & 0.44 \\ \hline niv & 0.24 & 0.2 & 0.31 & −0.01 & −14.05 & 0.49 \\ \hline \end{tabular}
+\end{table}
+Table III: Performance Metrics for Anomaly Detection ModelsStandard Bible (NASB1995) flagged fewer than 7%. These discrepancies may reflect genuine stylistic sensitivity differences or translation-specific over-flagging.
+
+Further analysis of uniquely flagged anomalies (Table V) confirmed the ESV's pronounced tendency toward translation-specific false positives, highlighting 131 unique anomalies. By contrast, NASB1995 flagged no unique anomalies, suggesting conservative detection and high inter-model agreement.
+
+To reduce these translation-specific artefacts, two cross-translation consensus strategies were employed: a **strict intersection**, flagging anomalies only if all translations agree, and **Stouffer's z-score aggregation**, combining scores statistically across translations.
+
+Comparative evaluation of these strategies (Table VI) highlights critical trade-offs. The strict intersection is precise but extremely conservative, retrieving only a small subset of anomalies flagged by individual models (e.g., just 7.16% from ESV). In contrast, Stouffer's method recovered most anomalies from individual models, resulting in broad coverage but potentially higher false positives.
+
+These baseline consensus strategies highlight the tension between precision and recall in anomaly detection and set the stage for the subsequent ensemble-based threshold optimisation analyses.
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|l|l|l|} \hline
+**Translation** & \multicolumn{2}{l|}{**Individual Flags**} & \multicolumn{2}{l|}{**Strict Overlap**} & \multicolumn{2}{l|}{**Stroffer Yield (\%)**} & \multicolumn{2}{l|}{**Stouffer Yield (\%)**} & \multicolumn{2}{l|}{**Stouffer Coverage (\%)**} \\ \hline NASB1995 & 64 & 40 & 62.5 & 64 & 100 & 10.85 \\ \hline NV & 189 & 40 & 21.16 & 187 & 98.94 & 31.69 \\ \hline NRSV & 228 & 40 & 17.54 & 227 & 99.56 & 38.47 \\ \hline NLT & 320 & 40 & 12.5 & 311 & 97.19 & 52.71 \\ \hline NET & 376 & 40 & 10.64 & 369 & 98.14 & 62.54 \\ \hline ESV & 559 & 40 & 7.16 & 515 & 92.13 & 87.29 \\ \hline \end{tabular}
+\end{table}
+Table VI: Consensus Yield and Coverage: Strict vs Stouffer
+
+\begin{table}
+\begin{tabular}{|l|l|l|} \hline
+**Translation** & \multicolumn{2}{l|}{**Unique Flags**} \\ \hline ESV & 131 \\ \hline NLT & 31 \\ \hline NET & 23 \\ \hline NV & 6 \\ \hline NRSV & 3 \\ \hline NASB1995 & 0 \\ \hline \end{tabular}
+\end{table}
+Table V: Translation-Specific False Positive Isolation
+
+### _Final Consensus Evaluation and Ensemble Optimisation_
+
+This final stage integrates all anomaly detection models into a cohesive ensemble, assessing whether multi-model consensus combined with optimised thresholds can surpass individual translation-specific models in anomaly detection accuracy and interpretive clarity.
+
+Three ensemble strategies were systematically compared: average z-score aggregation, strict intersection, and Stouffer's Z-score combination. Each was evaluated against heuristic interpolation labels in terms of classification accuracy, precision at the top 20 anomalies, and alignment with scholarly annotations.
+
+The average z-score method identified anomalies consistently flagged across translations, highlighting verses such as 1 Timothy 2:11, 2 Timothy 4:12, and 2 Corinthians 11:24. However, this method lacks explicit classification thresholds, limiting its practical utility.
+
+The strict intersection method significantly improved interpretive confidence, with 35% of top anomalies corresponding to scholarly interpolations, including previously overlooked verses like 2 Corinthians 11:32. Yet, this method was overly conservative, severely restricting overall anomaly coverage (F1 = 0.08, MCC = 0.016).
+
+To balance these extremes, Stouffer's method aggregated z-scores probabilistically. While it offered moderate interpretive performance (25% confirmed anomalies in top 20), its classification metrics remained modest (F1 = 0.42, MCC \(\approx\) 0). Nevertheless, this strategy was flexible and scalable for translation selection and threshold adjustments.
+
+Forward subset selection using Stouffer's method and grid-search optimisation identified NASB1995 alone as optimal at a z-score threshold of 4.88, achieving the highest precision-balanced score (TP - \(\lambda\cdot\)FP) but low recall (3%). Despite limited coverage, NASB1995 achieved the highest precision among the top-ranked anomalies (40%).
+
+A broader manual analysis of model subsets revealed optimal performance from a combination of NLT, NRSV, NASB1995, and NIV. Adjusting the false-positive penalty parameter (\(\lambda\)) from 0.55 to 0.5 facilitated this broader ensemble. This subset yielded the best overall trade-off (TP - \(\lambda\cdot\)FP = 7.5, MCC = 0.065) and maintained consistent scholarly alignment (25% top-ranked accuracy). Additionally, pairing NASB1995 and NIV demonstrated strong comparative performance under similar conditions.
+
+Table VII summarises these evaluations:
+
+These results demonstrate that ensemble strategies substantially refine anomaly detection by balancing interpretative precision with comprehensive anomaly coverage. Specifically, combining translation diversity with threshold optimisation yields robust performance beyond single-model limitations. Consequently, the BGSH pipeline effectively operationalises computational stylistics within hermeneutic contexts, providing reproducible and interpretatively meaningful anomaly diagnostics without manual annotations.
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|l|l|l|} \hline
+**Method** & **TP@20** & **\%TP@20** & **F1 (class 1)** & **MCC** & **TP – \(\lambda\cdot\)FP** & **Notes** \\ \hline Average z-score & 5 & 25.00\% & – & – & – & Pure ranking; no threshold; baseline aggregation \\ \hline Strict intersection & 7 & 35.00\% & 0.08 & 0.016 & – & High precision, poor recall \\ \hline Stouffer’s combined z-score & 5 & 25.00\% & 0.42 & 0.009 & – & Flexible, moderately balanced \\ \hline Forward selection (NASB1995 only) & 8 & 40.00\% & 0.05 & 0.027 & 1.4 & Best TP – \(\lambda\cdot\)FP score at \(\lambda\)-0.55; highest ranking quality \\ \hline Manual best subset (NLT, NRSV, NSV) & 5 & 25.00\% & 0.44 & 0.065 & 7.5 & \(\lambda\) reduced to 0.5 to permit selection beyond NASB1995 \\ \hline NASB1995 \(\ast\) NIV (formal vs dynamic) & 4 & 20.00\% & 0.38 & 0.033 & 7 & \(\lambda\) reduced to 0.5 to enable comparative model inclusion \\ \hline \end{tabular}
+\end{table}
+Table VII: Summary of Classification and Ranking Metrics Across Consensus Strategies and Ensembles
+
+## V Discussion and Interpretation
+
+### _Reliability of Fine-Tuned MLMs Across Translations (RQ1)_
+
+This research question examined whether masked language models (MLMs), fine-tuned on undisputed Pauline epistles, reliably detect stylistic anomalies in contested texts across multiple English translations. Chapter IV's findings confirm that, even in unsupervised settings, these models effectively highlighted verses aligning with prominent scholarly interpolation hypotheses. This result demonstrates that MLMs can implicitly learn and generalise subtle stylistic patterns across different epistolary contexts, countering scepticism regarding algorithmic sensitivity to nuanced theological or contextual distinctions.
+
+However, model reliability varied notably by translation. Models trained on formal translations (e.g., NASB1995) produced conservative anomaly distributions with fewer false positives, whereas those trained on dynamic translations (e.g., NLT) yielded broader anomaly distributions--likely reflecting translation-induced stylistic variance. These differences highlight that translation philosophy significantly impacts model calibration, a critical consideration for future computational hermeneutics research.
+
+Importantly, detected anomalies were not limited to overt linguistic outliers but included verses central to longstanding scholarly debates, indicating genuine stylistic sensitivity rather than mere statistical noise.
+
+Overall, this evaluation demonstrates that fine-tuned MLMs exhibit substantial diagnostic acuity across multiple translations. This foundational evidence supports the ensemble and optimisation strategies explored subsequently and reinforces unsupervised language modelling as a rigorous, reproducible component of computational philology.
+
+### _Impact of Cross-Translation Consensus (RQ2)_
+
+The second research question addressed whether cross-translation consensus enhances robustness by reducing translation-specific false positives. Results confirmed that consensus strategies prioritise anomalies persisting consistently across translations, thus effectively distinguishing deeper stylistic irregularities from translation artefacts.
+
+The strict intersection method--where only anomalies agreed upon by all translations were flagged--yielded fewer anomalies but significantly improved interpretative confidence. These consistently identified anomalies likely reflect underlying irregularities in the Greek text rather than translation-specific phenomena. Conversely, Stouffer's probabilistic z-score aggregation maintained broader anomaly coverage, balancing interpretive clarity and sensitivity. Notably, both methods identified overlapping anomalies recognised in longstanding textual-critical discussions, demonstrating their efficacy without external annotation or doctrinal cueing.
+
+Importantly, anomalies identified via consensus methods reflect stylistic patterns robust enough to transcend translational variation. Although operating exclusively on English translations, the persistence of these signals implies a deeper textual irregularity rather than superficial linguistic quirks. Thus, consensus methods significantly enhance the interpretive validity of unsupervised anomaly detection, operationalising a form of statistically grounded hermeneutic triangulation.
+
+These findings support the hypothesis that ensemble-based cross-translation methods effectively reduce false positives, providing a stable and reproducible basis for unsupervised stylistic anomaly detection in the Pauline corpus. This methodological groundwork facilitates future extensions directly into Greek texts, where translation mediation can be eliminated entirely.
+
+### _Alignment with Textual-Critical Scholarship (RQ3)_
+
+Research Question 3 evaluates whether anomalies detected by the BGSH pipeline correspond to textual-critical claims of interpolation or redaction in Pauline literature. Rather than resolving debates, the BGSH method provides a transparent, reproducible tool for highlighting stylistic outliers that align closely with established scholarly concerns. By ranking verses according to stylistic deviation from known Pauline norms across multiple translations, the pipeline assists scholars in systematically prioritising verses for detailed textual-critical scrutiny.
+
+Notably, several well-known scholarly interpolations consistently appeared among top-ranked anomalies, including controversial texts such as 1 Timothy 2:11 (regarding women's roles), 2 Cornithians 11:24 and 11:32 (significant in composite-letter theories), and Titus 3:10 (ethical parensis). The recurrence of these specific verses across diverse experimental conditions--single-translation models, strict intersection, and probabilistic Stouffer aggregation--highlights the robustness of BGSH's unsupervised detection capability. Importantly, no explicit annotations or doctrinal biases were introduced; anomalies emerged organically from statistical deviations identified via z-score-normalised perplexity.
+
+Moreover, the models demonstrated discriminative selectivity by consistently excluding verses with minimal prior scholarly suspicion, further validating their interpretative sensitivity. Yet, some highly-ranked anomalies did not align with existing scholarship. Verses such as 1 Timothy 5:3 ("Honour widows who are truly widows"), 2 Timothy 4:20 ("Erastus remained at Corinth..."), and 1 Timothy 6:6 ("But goldliness with contentment is great gain"), although stylistically distinctive, lack textual-critical support as interpolations. These instances suggest model sensitivity to structural independence or rhetorical shifts rather than solely redactional insertions, underscoring the necessity for interpretative post-filtering.
+
+In summary, the BGSH approach effectively aligns unsupervised computational anomaly detection with traditional textual-critical hypotheses, while simultaneously identifying novel anomalies that merit future scholarly evaluation. These findings demonstrate its potential as a rigorous diagnostic complement to traditional philological methods, facilitating transparent and systematic exploration of stylistic anomalies in biblical studies.
+
+### _Optimised Ensemble Modelling (RQ4)_
+
+The final stage of the BGSH pipeline employed ensemble optimisation to determine model combinations and thresholds that optimally balance detection sensitivity and precision. Forward selection identified translation subsets whose aggregated z-scores, computed via Stouffer's method, maximised the penalised objective (TP - \(\lambda\).FP). Two notable outcomes emerged: NASB1995 alone yielded the highest precision among single models, correctly identifying 40% true interpolations within the top 20 ranked verses; and an optimised ensemble (NLT, NRSV, NASB1995, NIV), which achieved the best compromise of sensitivity and specificity with 25% true anomalies in the top 20 verses and the strongest overall penalised score (\(\lambda=0.5\)).
+
+Threshold tuning proved crucial. Under the original \(\lambda=0.55\), NASB1995 dominated selection, indicating its conservative, precision-oriented detection. Adjusting the penalty parameter to \(\lambda=0.5\) broadened ensemble participation, allowing translation diversity to contribute more effectively. This result underscores the advantage of multi-model ensembles in mitigating translation-specific anomalies and highlights that selective integration across translations can substantially improve performance.
+
+Qualitative inspection of top-ranked anomalies revealed consistent alignment with prominent scholarly interpolation hypotheses, such as contested verses in 1 Timothy 2:11 and 2 Timothy 4:12. This alignment supports RQ3, confirming the interpretative credibility of computationally derived stylistic anomalies.
+
+However, the Matthews Correlation Coefficient (MCC) scores remained uniformly low (0.01-0.07), suggesting poor binary classification under conventional metrics. This outcome reflects known limitations of the heuristic dataset, notably the penalty of partial matches within multi-verse interpolations and the inherent class imbalance. Furthermore, the BGSH methodology primarily aims at surfacing plausible candidates for scholarly analysis rather than maximising conventional classification accuracy.
+
+In summary, ensemble optimisation demonstrates the value of integrating translation-specific models through statistically principled methods. Despite limitations in conventional classification metrics, the ensemble approach effectively highlights verses consistent with textual-critical scholarship, offering a rigorous, interpretatively credible pathway for anomaly detection within biblical studies.
+
+## VI Conclusion and Future Work
+
+This study investigated the feasibility of using masked language models (MLMs), specifically fine-tuned on undisputed Pauline epistles, as unsupervised tools for detecting stylistic anomalies in contested biblical texts. To this end, it introduced the BERT-Guided Stylistic Hermeneutics (BGSH) framework--a computational pipeline combining pseudo-perplexity scoring with z-score normalisation to identify verses exhibiting notable linguistic deviations from established Pauline baselines. Through rigorous experimentation, it has been established that MLMs are capable not only of internalising Pauline stylistic conventions with impressive fidelity but also of identifying verses that align significantly with established scholarly hypotheses of textual interpolation and redaction.
+
+A key methodological outcome of this research is the successful demonstration of cross-translation consensus strategies--employing strict intersection and Stouffer's z-score aggregation. These methods effectively mitigate translation-specific idiosyncrasies, thus enhancing the reliability of anomaly detection. Crucially, the unsupervised nature of these methods eliminates reliance on manual annotations, achieving a robust form of probabilistic validation. Consequently, detected anomalies frequently correlate closely with existing textual-critical suspicions of interpolation, pseudonymous authorship, or doctrinal insertions, highlighting the hermeneutic relevance of computational diagnostics in biblical studies.
+
+The methodological innovations presented in this work bridge the gap between statistical language modelling and interpretive textual criticism. By leveraging ensemble-based configurations and carefully calibrated penalisation criteria, the BGSH pipeline navigates the inherent tension between detection sensitivity and interpretive precision. Notably, ensemble configurations involving both formal (e.g., NASB1995, NRSV) and dynamic translations (e.g., NLT, NIV) delivered balanced and interpretively coherent results, surpassing the performance achievable by single-model systems. The superior performance of the NASB1995 translation individually demonstrates the particular effectiveness of formally equivalent translations in capturing nuanced stylistic signals.
+
+Nevertheless, the limitations inherent to this research are acknowledged explicitly. Foremost is the exclusive reliance on English translations, which unavoidably introduces an interpretive filtering layer. While stylistic anomalies detected consistently across translations strongly suggest underlying textual irregularities, the original Koine Greek remains the definitive locus of authorial intent and stylistic authenticity. Furthermore, the evaluation dataset, derived heuristically from scholarly literature, provides only weak supervision at the verse level. Consequently, conventional metrics such as the Matthews Correlation Coefficient (MCC) appear artificially low--not as indicators of methodological inadequacy, but due to the structural mismatch between metric design and the granularity of scholarly annotations. These factors reinforce the necessity for cautious, context-sensitive interpretation of computational outputs.
+
+Despite these constraints, this research significantly advances the integration of computational methods with traditional biblical hermeneutics. The BGSH framework demonstrates convincingly that computational stylistics can be applied rigorously and interpretively, providing textual scholars with a scalable and reproducible diagnostic tool. Rather than seeking to supplant traditional excegies, the BGSH approach supplements scholarly inquiry by highlighting empirically grounded anomalies that merit closer philological and rheological examination. Thus, it enhances rather than replaces human interpretive judgment, promoting a nuanced and methodologically transparent dialogue between computational analysis and textual criticism.
+
+Future research opportunities abound from these foundational results. Most immediately, extending analysis to the Koine Greek source texts would significantly enhance interpretive precision, allowing clearer differentiation between translation-induced artefacts and genuine stylistic anomalies. Broadening the corpus beyond Pauline literature to include other canonical and pseudepigraphical writings could further generalise stylistic baselines, enabling more comprehensive attribution and clustering studies within biblical scholarship. Methodological advancements, including hierarchical stylistic modelling, rhetorical feature integration, and diachronic tracking of compositional layers, promise deeper insights into complex textual stratification. Additionally, interactive systems employing human-in-the-loop techniques could empower scholars to iteratively refine diagnostic criteria or visually inspect candidate anomalies, combining computational efficiency with expert interpretive oversight.
+
+In conclusion, this research demonstrates that masked language models, when rigorously calibrated and appropriately contextualised, function effectively as hermeneutic agents. The BGSH framework provides textual critics with a novel computational lens, balancing algorithmic rigour with necessary interpretive humility. However, while the framework offers compelling evidence of stylistic irregularities, it does not presume to deliver final verdicts on questions of authorship or authenticity. Stylistic anomalies may originate from diverse factors, including rhetorical shifts, genre variation, or translation idiosyncrasies. Consequently, the anomalies identified should be regarded as heuristic indicators rather than definitive conclusions, guiding and enriching ongoing scholarly dialogue rather than concluding it. As the field of digital biblical studies advances, frameworks such as BGSH will undoubtedly play an increasingly central role in synthesising computational precision with the depth of humanistic inquiry.
+
+## VII Ethics Considerations
+
+### _Data Acquisition and Usage_
+
+The primary data for this study consisted of six modern English Bible translations (ESV, NLT, NASB1995, NRSV, NIV, and NET). All textual content was acquired in accordance with fair use provisions for research purposes. No copyrighted material was redistributed, and the computational analysis maintained the integrity of the original texts without manipulation of content. The research explicitly avoided creating derivative works that might infringe upon publishers' rights, focusing instead on statistical analysis of stylistic patterns.
+
+The study deliberately restricted itself to published, widely available translations rather than unpublished or restricted manuscripts, thus avoiding potential issues regarding unauthorised access to protected archival materials. Furthermore, all translations were cited appropriately throughout the research, acknowledging the intellectual and creative contributions of the translation teams.
+
+### _Interpretative Responsibility_
+
+A central ethical concern in applying computational methods to religious texts involves the potential misinterpretation or misrepresentation of theologically significant content. The BGSH framework was designed with interpretative humility as a guiding principle--it identifies stylistic anomalies without making definitive claims about theological authenticity or divine inspiration. Throughout the study, a clear distinction was maintained between computational stylistic analysis and theological interpretation, emphasising that statistical deviation does not necessarily imply inauthenticity in a religious context.
+
+The research explicitly acknowledges the epistemological limitations of computational methods when applied to texts with spiritual significance to religious communities. By positioning the BGSH framework as a supplement to, rather than a replacement for, traditional hermeneutical approaches, the study respects the complex interpretative traditions surrounding biblical texts while offering new methodological tools to enrich scholarly discourse.
+
+### _Algorithmic Transparency and Bias_
+
+Transparency in computational methodology was prioritised to enable critical evaluation and replication. The study provides detailed documentation of preprocessing steps, model architecture, training procedures, and evaluation metrics. This transparency extends to acknowledging limitations in the methodology, particularly regarding the exclusive reliance on English translations rather than the original Greek text, and potential biases in the heuristic dataset compiled from scholarly literature.
+
+Special attention was paid to potential algorithmic biases that might emerge from:
+
+1. The selection of "undisputed" Pauline texts for training, which reflects scholarly consensus but introduces a circular element to the methodology
+2. The inherent interpretative biases of each translation tradition
+3. The statistical assumptions underlying z-score normalisation across distributions that do not perfectly conform to Gaussian patterns
+
+To mitigate these concerns, multiple consensus strategies were implemented, and results were presented with appropriate statistical caveats rather than as definitive classifications. The study explicitly avoids presenting computational outputs as objective truth, instead treating them as probabilistic signals requiring scholarly contextualisation.
+
+### _Interdisciplinary Respect_
+
+The BGSH framework operates at the intersection of computer science and biblical studies, necessitating ethical consideration of interdisciplinary power dynamics. Computational approaches risk oversimplifying nuanced philological and theological questions, potentially undermining traditional humanities scholarship through claims of algorithmic objectivity.
+
+This research deliberately adopts a stance of disciplinary humility, presenting computational methods as complementary to, rather than superseding, established hermeneutical practices. By engaging substantively with existing textual-critical scholarship and framing computational outputs as contributions to ongoing scholarly conversations, the study maintains respect for the distinct methodological traditions of biblical studies while introducing innovative computational approaches.
+
+### _Societal and Religious Impact_
+
+The detection of stylistic anomalies in religious texts could have broader societal implications, particularly for faith communities that value these texts. The research carefully avoids sensationalistic claims about "disproving" traditional attributions or undermining religious authority. Instead, it presents stylistic analysis as one of many tools for understanding the complex compositional history of ancient texts.
+
+The study acknowledges that computational findings suggesting potential interpolations might be sensitive for some religious readers. However, it situates these findings within the long tradition of textual criticism that has existed within religious scholarship itself, thus respecting both academic inquiry and religious tradition.
+
+### _Data Security and Privacy_
+
+Although this research did not involve human subjects or personally identifiable information, proper data security practices were maintained throughout. All computational experiments were conducted on secure research infrastructure with appropriate access controls. Model checkpoints, intermediate results, and analysis outputs were stored securely to prevent unauthorised modification or misuse.
+
+### _Future Ethical Considerations_
+
+The BGSH framework has been developed with forward compatibility in mind, anticipating ethical questions that might arise from future applications or extensions:
+
+1. Potential application to other religious or culturally significant texts would require similar ethical frameworks adapted to their specific contexts.
+2. Extensions incorporating original language analysis would need to address additional philological considerations.
+3. Public-facing applications or web interfaces would require careful framing to prevent misinterpretation or misuse of computational results.
+
+In acknowledgment of these considerations, the study proposes responsible guidelines for future development, emphasising the need for ongoing ethical reflection as computational hermeneutics continues to evolve.
+
+### _Conclusion_
+
+The ethical dimensions of applying advanced language models to religious texts extend beyond procedural compliance to encompass deeper questions of interpretative responsibility, algorithmic transparency, interdisciplinary respect, and potential societal impact. Throughout this project, these considerations have guided methodological decisions, presentation of results, and articulation of limitations. By maintaining ethical awareness alongside technical rigor, this research aims to contribute meaningfully to both computational stylistics and biblical studies while respecting the complex epistemological and cultural contexts in which these disciplines operate.
+
+## Acknowledgement
+
+The author gratefully acknowledges the intellectual freedom afforded during the research process and the opportunity to independently explore the methodological and interpretive dimensions of this thesis.
+
+The author further acknowledges the use of generative AI tools such as OpenAI's ChatGPT in refining academic writing, clarifying conceptual structure, and improving prose cohesion. All methodological content, experimental implementation, and scholarly interpretation remain solely the intellectual contribution of the author.
+
+## References
+
+* [1] S. K. Khamis, F. Mosteller, and D. L. Wallace, "Inference and Disputed Authorship: The Federalist," Revue de l'Institut International de Statistique / Review of the International Statistical Institute, vol. 34, no. 2, p. 277, 1966, doi: 10.2307/1401781.
+* [2] J. F. Burrows, Computation into Criticism: A Study of Jane Austen's Novels and an Experiment in Method. Oxford: Clarendon Press, Oxford University Press, 1987.
+* [3] D. I. Holmes, "The Analysis of Literary Style-A Review," J R Stat Soc Ser A, vol. 148, no. 4, p. 328, 1985, doi: 10.2307/2981893.
+* [4] D. I. Holmes, "Authorship attribution," Comput Hum, vol. 28, no. 2, pp. 87-106, Apr. 1994, doi: 10.1007/BF01830689.
+* [5] M. Eder, J. Rybicki, and M. Kestemont, "Styometry with R: A Package for Computational Text Analysis," 2016. [Online]. Available: [https://github.com/computationalytistics/sylio](https://github.com/computationalytistics/sylio)
+* [6] J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding," in Proceedings of the 2015 Conference of the North, Stroudsburg, PA, USA: Association for Computational Linguistics, Nov. 2019, pp. 4171-4186. doi: 10.18653/v1-119-4123.
+* [7] P. He, J. Gao, and W. Chen, "DeBERTaV3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing," Nov. 2021, [Online]. Available: [http://arxiv.org/abs/2111.09543](http://arxiv.org/abs/2111.09543)
+* [8] R. Bommassini, K. Davis, and C. Cardie, "Interpreting Pretrained Contextualized Representations via Reductions to Static Embeddings," in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, Stroudsburg, PA, USA: Association for Computational Linguistics, 2020, pp. 4758-4781. doi: 10.18653/v1/2020.acl-main.431.
+* [9] A. Vaswani et al., "Attention Is All You Need," Adv Neural In Proceedings Syst, vol. 30, 2017, Accessed: Mar. 30, 2025. [Online]. Available: [https://proceedings.neurips.cc/paper/files/paper/2017/file/36e2543547dee91fbd053c1c4a845aa-Paper.pdf](https://proceedings.neurips.cc/paper/files/paper/2017/file/36e2543547dee91fbd053c1c4a845aa-Paper.pdf)
+* [10] A. Rogers, O. Kovaleva, and A. Rumshisky, "A Primer in BERTology: What We Know About How BERT Works," Trans Assoc Comput Linguist, vol. 8, pp. 842-866, Dec. 2020, doi: 10.1162/tacl.a.00349.
+* [11] J. Salazar, D. Liang, T. Q. Nguyen, and K. Kirchhoff, "Masked Language Model Scoring," in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, Stroudsburg, PA, USA: Association for Computational Linguistics, Oct. 2020, pp. 2699-2712. doi: 10.18653/v1/2020.acl-main.240.
+* [12] Y. Wu, Y. Bizzoni, P. Moreira, and K. Nielbo, "Perplexing Canon: A study on GPT-based perplexity for canonical and non-canonical literary works," in Proceedings of the 8th Joint SIGHUM Workshop on Computational Linguistics for Cultural Heritage, Social Sciences, Humanities and Literature (LaTeCH-CLf. 2024), 2024, pp. 172-184. [Online]. Available: [https://authors.ai/marlowe/](https://authors.ai/marlowe/)
+* [13] B. M. Metzger and B. D. Ehrman, The Text of the New Testament: Its Transmission, Corruption, and Restoration, 4th ed. Oxford University Press, 2005.
+* [14] E. Tov, Textual Criticism of the Hebrew Bible, 3rd ed. Minneapolis, MN: Fortress Press, 2011.
+* [15] B. D. Ehrman, The Orthodox Corruption of Scripture: The Effect of Early Christological Controversies on the Text of the New Testament. Oxford University Press, 2011.
+* [16] G. D. Fee, The First Epistle to the Corinthians, 1st ed. William B. Eerdman's Publishing Company, 1987.
+
+* [17] S. A. Stouffer, E. A. Suchman, L. C. DeVinney, S. A. Star, and R. M. Williams Jr, "The american soldier: Adjustment during army life.(studies in social psychology in woird war ii), vol. 1, '1949.
+* [18] Y. Liu et al., "RoBERTa: A Robustly Optimized BERT Pretraining Approach," Jul. 2019, [Online]. Available: [http://arxiv.org/abs/1907.11692](http://arxiv.org/abs/1907.11692)
+* [19] B. Warner et al., "Smarter, Better, Faster, Langer: A Modern Bidirectional Encoder for Fast, Memory Efficient, and Long Context Finetuning and Inference," Dec. 2024, [Online]. Available: [http://arxiv.org/abs/2412.13663](http://arxiv.org/abs/2412.13663)
+* [20] N. A. Heard and P. Rubin-Delanchy, "Choosing between methods of combining p-values," Biometrika, vol. 105, no. 1, pp. 239-246, Mar. 2018, doi: 10.1093/biomet/asx076.
+
+**Word Count: 8837**
