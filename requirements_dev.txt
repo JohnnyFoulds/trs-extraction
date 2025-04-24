@@ -1,9 +1,18 @@
 ipykernel==6.29.5
 ipywidgets==8.1.5
-
-nougat-ocr==0.1.17
-albumentations==1.1.0
-transformers==4.38.2
-
 pytest==8.3.5
 wandb[media]==0.19.9
+
+# nougat ocr
+nougat-ocr==0.1.17
+#albumentations==1.1.0
+transformers==4.38.2
+
+# paddle ocr
+albucore==0.0.16
+albumentations==1.4.10
+PyMuPDF==1.25.5
+#--extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cu124/
+#paddlepaddle-gpu==2.6.2
+paddlepaddle==3.0.0
+paddleocr==2.10.0
